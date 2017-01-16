@@ -73,6 +73,21 @@ class Nbody(object):
 
         return self.q + self.dt * phi(1, 0.0) * f(self.q) + self.dt * 16. * phi(3, 0.0) * Dn2 + self.dt * (-2. * phi(3, 0.0)) * Dn3
 
+    def dormand_prince(f):
+        # see https://en.wikipedia.org/wiki/Dormand%E2%80%93Prince_method
+        k = numpy.zeros(7)
+        b = numpy.array([35/384, 0, 500/1113, 125/192, −2187/6784, 11/84, 0.])
+
+        k[0] = f(self.q)
+        k[1] = f(self.q + self.dt * 1/5 * k[0])
+        k[2] = f(self.q + self.dt * (3/40 * k[0] + 9/40 * k[1]))
+        k[3] = f(self.q + self.dt * (44/45 * k[0] − 56/15 * k[1] + 32/9 * k[2]))
+        k[4] = f(self.q + self.dt * (19372/6561 * k[0] − 25360/2187 * k[1] + 64448/6561 * k[2] - 212/729 * k[3]))
+        k[5] = f(self.q + self.dt * (9017/3168 * k[0] - 355/33 * k[1] + 46732/5247 * k[2] + 49/176 * k[3] - 5103/18656 * k[4]))
+        k[6] = f(self.q + self.dt * (35/384 * k[0] + 500/1113 * k[2] + 125/192 * k[3] - 2187/6784 * k[4] + 11/84 * k[5]))
+
+        return self.q + self.dt * numpy.sum(k * b)
+
 
     def potential_energy(self):
         U = 0
@@ -124,7 +139,7 @@ class Nbody(object):
         for i in range(self.nt):
             self.time += 1
 
-            self.q = self.pexprb43(self.step)
+            self.q = self.dormand_prince(self.step)
 
             self.contain_particles()
 
