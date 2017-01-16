@@ -1,0 +1,173 @@
+import numpy
+from numpy.random import rand
+import h5py
+from matplotlib import pyplot, animation, cm, gridspec
+
+class Nbody(object):
+    def __init__(self, nbodies=100, nt=1000, dt=0.0001, output_file="nbody_data.h5"):
+        self.G = 5.0 # Gravitational constant
+        self.nbodies = nbodies # number of bodies
+        self.nt = nt # number of timesteps
+        self.dt = dt # size of timestep
+        self.time = 0 # current time
+
+        self.box_size = (10.,10.) # size of box, centred on origin
+
+        self.q = rand(nbodies, 2, 2)
+        self.q[:,0,:] = 1.0 * self.q[:,0,:] - 0.5 # velocities
+        self.q[:,1,:] = 8. * self.q[:,1,:] - 4. # positions
+
+        self.masses = 15. * (0.1 + rand(nbodies)) # masses of bodies
+
+        self.U = self.potential_energy()
+        self.T = self.kinetic_energy()
+        self.I = self.moment_of_inertia()
+
+        # set up hdf5 file with datasets
+        self.output_file = h5py.File(output_file, "w")
+        self.output_file.create_dataset("q", (nt+1, nbodies, 2, 2))
+        self.output_file.create_dataset("U", (nt+1,))
+        self.output_file.create_dataset("T", (nt+1,))
+        self.output_file.create_dataset("I", (nt+1,))
+
+        self.write_to_file()
+
+    def step(self, q):
+        f = numpy.zeros_like(q)
+
+        for n in range(self.nbodies):
+            r = q[numpy.newaxis, n, 1,:] - q[:,1,:]
+            dist = numpy.sqrt(numpy.sum(r**2, axis=1))
+            dist[numpy.absolute(dist) < 1.e-10] = 1.e12 # hard-core potential
+            f[:,0,:] += self.G * self.masses[n] * r / dist[:,numpy.newaxis]**3
+
+        f[:,1,:] = q[:,0,:]
+
+        return f
+
+    def rk3(self, f):
+        q1 = self.q + f(self.q) * self.dt
+
+        q2 = 0.25 * (3. * self.q + q1 + f(q1) * self.dt)
+
+        return (1./3.) * (self.q + 2. * q2 + 2. * f(q2) * self.dt)
+
+    @staticmethod
+    def isinteger(x):
+        return numpy.equal(numpy.mod(x, 1), 0)
+
+    def pexprb43(self, f):
+        def phi(k, z):
+            assert self.isinteger(k), "k = %f is not an integer" % k
+            if k == 0:
+                return numpy.exp(z)
+            elif z < 1.e-12:
+                return 1.0
+            else:
+                return (phi(k-1, z) - phi(k-1, 0)) / z
+        Un2 = self.q + 0.5 * self.dt * phi(1,0.0) * f(self.q)
+        Un3 = self.q + self.dt * phi(1,0.0) * f(self.q)
+
+        Dn2 = f(Un2) - f(self.q)
+        Dn3 = f(Un3) - f(self.q)
+
+        return self.q + self.dt * phi(1, 0.0) * f(self.q) + self.dt * 16. * phi(3, 0.0) * Dn2 + self.dt * (-2. * phi(3, 0.0)) * Dn3
+
+
+    def potential_energy(self):
+        U = 0
+        for n in range(self.nbodies):
+            r = self.q[numpy.newaxis, n, 1,:] - self.q[:,1,:]
+            dist = numpy.sqrt(numpy.sum(r**2, axis=1))
+            dist[numpy.absolute(dist) < 1.e-10] = 1.e12 # hard-core potential
+            U += self.G * numpy.sum(self.masses[n]*self.masses[:] / dist)
+        return U
+
+    def kinetic_energy(self):
+        p_squared = self.masses**2 * numpy.sum(self.q[:,1,:]**2, axis=1)
+
+        return numpy.sum(p_squared / (2.0 * self.masses))
+
+    def moment_of_inertia(self):
+        return numpy.sum(self.masses * numpy.sum(self.q[:,1,:]**2, axis=1))
+
+    def write_to_file(self):
+        self.output_file["q"][self.time,:,:,:] = self.q
+        self.output_file["U"][self.time] = self.U
+        self.output_file["T"][self.time] = self.T
+        self.output_file["I"][self.time] = self.I
+
+    def contain_particles(self):
+        for n in range(self.nbodies):
+            # x-direciton
+            if self.q[n,1,0] < -0.5*self.box_size[0]:
+                self.q[n,1,0] = -self.box_size[0] - self.q[n,1,0]
+                self.q[n,0,0] *= -1.
+            elif self.q[n,1,0] > 0.5*self.box_size[0]:
+                self.q[n,1,0] = self.box_size[0] - self.q[n,1,0]
+                self.q[n,0,0] *= -1.
+            if self.q[n,1,1] < -0.5*self.box_size[1]:
+                self.q[n,1,1] = -self.box_size[1] - self.q[n,1,1]
+                self.q[n,0,1] *= -1.
+            elif self.q[n,1,1] > 0.5*self.box_size[1]:
+                self.q[n,1,1] = self.box_size[1] - self.q[n,1,1]
+                self.q[n,0,1] *= -1.
+
+    def evolve(self):
+        fig = pyplot.figure(figsize=(18,8))
+        gridspec.GridSpec(2,4)
+        ax1 = pyplot.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
+        ax2 = pyplot.subplot2grid((2,4), (0,2), colspan=2)
+        ax3 = pyplot.subplot2grid((2,4), (1,2), colspan=2)
+        pyplot.ion()
+        #pyplot.show()
+        for i in range(self.nt):
+            self.time += 1
+
+            self.q = self.pexprb43(self.step)
+
+            self.contain_particles()
+
+            self.U = self.potential_energy()
+            self.T = self.kinetic_energy()
+            self.I = self.moment_of_inertia()
+
+            #self.print_state()
+            self.write_to_file()
+            self.plot_bodies(ax1)
+            if i % 20 == 0:
+                self.plot_energies(ax2)
+                self.plot_inertia(ax3)
+
+        self.output_file.close()
+
+    def print_state(self):
+        print("time = {},  U = {},  T = {},  I = {}".format(self.time, self.U, self.T, self.I))
+
+    def plot_bodies(self, ax):
+        ax.clear()
+        ax.set_xlim(-self.box_size[0]/2., self.box_size[0]/2)
+        ax.set_ylim(-self.box_size[1]/2.,self.box_size[1]/2.)
+        ax.set_title('Particles')
+        ax.scatter(self.q[:,1,0], self.q[:,1,1], s=20.*self.masses, c=numpy.array(range(self.nbodies))/self.nbodies, alpha=0.5)
+        pyplot.pause(.00001)
+
+    def plot_energies(self, ax):
+        ax.set_xlim(0,self.nt)
+        ax.set_ylim(0,1.e7)
+        ax.set_title('Energy')
+        ax.scatter(self.time, self.T + self.U, c='k', marker='o', label=r'$E$')
+        ax.scatter(self.time, self.U, c='r', marker='x', label=r'$U$')
+        ax.scatter(self.time, self.T, c='b', marker='+', label=r'$T$')
+        if self.time == 1:
+            ax.legend()
+
+    def plot_inertia(self, ax):
+        ax.set_xlim(0,self.nt)
+        ax.set_ylim(0,5.e4)
+        ax.set_title('Moment of inertia')
+        ax.scatter(self.time, self.I, marker='x')
+
+if __name__ == "__main__":
+    nbody = Nbody()
+    nbody.evolve()
