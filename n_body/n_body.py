@@ -1,5 +1,6 @@
 import numpy
 from numpy.random import rand
+from numpy.linalg import solve
 import h5py
 from matplotlib import pyplot, animation, cm, gridspec
 
@@ -73,20 +74,46 @@ class Nbody(object):
 
         return self.q + self.dt * phi(1, 0.0) * f(self.q) + self.dt * 16. * phi(3, 0.0) * Dn2 + self.dt * (-2. * phi(3, 0.0)) * Dn3
 
-    def dormand_prince(f):
+    def dirk3(self, f):
+        mu = 0.5 * (1. - 1./numpy.sqrt(3.))
+        nu = 0.5 * (numpy.sqrt(3.))
+        gamma = 3. / (2. * (3. + numpy.sqrt(3.)))
+        lbda = 3. * (1. + numpy.sqrt(3.)) / (2. * (3. + numpy.sqrt(3.)))
+
+        f1 = f(self.q + self.dt * mu)[:,:,:]
+        f1[:,1,:] = 0.
+        f2 = f(self.q + self.dt * (nu + 2. * mu))[:,:,:]
+        f2[:,1,:] = 0.
+        q_new = numpy.zeros_like(self.q)
+
+        for i in range(self.nbodies):
+            A = numpy.array([[0., 0.], [1., 0.]])
+            M = numpy.eye(2) - self.dt * mu * A
+            b1 = self.q[i,:,:] + self.dt * mu * f1[i, :, :]
+            y1 = solve(M, b1)
+
+            b2 = y1 + self.dt * nu * (A * y1 + f1[i, :, :]) + self.dt * mu * f2[i, :, :]
+            y2 = solve(M, b2)
+
+            q_new[i,:,:] = (1 - lbda) * self.q[i,:,:] + lbda * y2 + self.dt * gamma * (A * y2 + f2[i,:,:])
+
+        return q_new
+
+
+    def dormand_prince(self, f):
         # see https://en.wikipedia.org/wiki/Dormand%E2%80%93Prince_method
-        k = numpy.zeros(7)
-        b = numpy.array([35/384, 0, 500/1113, 125/192, −2187/6784, 11/84, 0.])
+        k = numpy.zeros((7 , self.nbodies, 2, 2))
+        b = numpy.array([35/384, 0, 500/1113, 125/192, -2187/6784, 11/84, 0.])
 
         k[0] = f(self.q)
         k[1] = f(self.q + self.dt * 1/5 * k[0])
         k[2] = f(self.q + self.dt * (3/40 * k[0] + 9/40 * k[1]))
-        k[3] = f(self.q + self.dt * (44/45 * k[0] − 56/15 * k[1] + 32/9 * k[2]))
-        k[4] = f(self.q + self.dt * (19372/6561 * k[0] − 25360/2187 * k[1] + 64448/6561 * k[2] - 212/729 * k[3]))
+        k[3] = f(self.q + self.dt * (44/45 * k[0] - 56/15 * k[1] + 32/9 * k[2]))
+        k[4] = f(self.q + self.dt * (19372/6561 * k[0] - 25360/2187 * k[1] + 64448/6561 * k[2] - 212/729 * k[3]))
         k[5] = f(self.q + self.dt * (9017/3168 * k[0] - 355/33 * k[1] + 46732/5247 * k[2] + 49/176 * k[3] - 5103/18656 * k[4]))
         k[6] = f(self.q + self.dt * (35/384 * k[0] + 500/1113 * k[2] + 125/192 * k[3] - 2187/6784 * k[4] + 11/84 * k[5]))
 
-        return self.q + self.dt * numpy.sum(k * b)
+        return self.q + self.dt * numpy.sum(k * b[:,numpy.newaxis, numpy.newaxis, numpy.newaxis], axis=0)
 
 
     def potential_energy(self):
@@ -139,7 +166,7 @@ class Nbody(object):
         for i in range(self.nt):
             self.time += 1
 
-            self.q = self.dormand_prince(self.step)
+            self.q = self.dirk3(self.step)
 
             self.contain_particles()
 
@@ -169,7 +196,7 @@ class Nbody(object):
 
     def plot_energies(self, ax):
         ax.set_xlim(0,self.nt)
-        ax.set_ylim(0,1.e7)
+        ax.set_ylim(0,5.e6)
         ax.set_title('Energy')
         ax.scatter(self.time, self.T + self.U, c='k', marker='o', label=r'$E$')
         ax.scatter(self.time, self.U, c='r', marker='x', label=r'$U$')
@@ -179,7 +206,7 @@ class Nbody(object):
 
     def plot_inertia(self, ax):
         ax.set_xlim(0,self.nt)
-        ax.set_ylim(0,5.e4)
+        ax.set_ylim(0,3.e4)
         ax.set_title('Moment of inertia')
         ax.scatter(self.time, self.I, marker='x')
 
