@@ -5,7 +5,7 @@ import h5py
 from matplotlib import pyplot, animation, cm, gridspec
 
 class Nbody(object):
-    def __init__(self, nbodies=100, nt=1000, dt=0.0001, output_file="nbody_data.h5"):
+    def __init__(self, nbodies=100, nt=1000, dt=0.0001, output_file="nbody_data.h5", integrator="dormand-prince"):
         self.G = 5.0 # Gravitational constant
         self.nbodies = nbodies # number of bodies
         self.nt = nt # number of timesteps
@@ -33,7 +33,16 @@ class Nbody(object):
 
         self.write_to_file()
 
+        integrators = {"rk3": self.rk3, "dirk3":self.dirk3, "dormand-prince": self.dormand_prince, "adams-moulton": self.adams_moulton, "adams-bashforth": self.adams_bashforth}
+
+        if integrator in integrators:
+            self.integrator = integrators[integrator]
+        else:
+            print("Could not find integrator {} - defaulting to dormand-prince.".format(integrator))
+            self.integrator = self.dormand_prince
+
     def step(self, q):
+        # step simulation through one timestep
         f = numpy.zeros_like(q)
 
         for n in range(self.nbodies):
@@ -47,6 +56,7 @@ class Nbody(object):
         return f
 
     def rk3(self, f):
+        # Third-order Runge-Kutta
         q1 = self.q + f(self.q) * self.dt
 
         q2 = 0.25 * (3. * self.q + q1 + f(q1) * self.dt)
@@ -75,6 +85,7 @@ class Nbody(object):
         return self.q + self.dt * phi(1, 0.0) * f(self.q) + self.dt * 16. * phi(3, 0.0) * Dn2 + self.dt * (-2. * phi(3, 0.0)) * Dn3
 
     def dirk3(self, f):
+        # Implicit diagonal third order Runge-Kutta
         mu = 0.5 * (1. - 1./numpy.sqrt(3.))
         nu = 0.5 * (numpy.sqrt(3.))
         gamma = 3. / (2. * (3. + numpy.sqrt(3.)))
@@ -99,7 +110,6 @@ class Nbody(object):
 
         return q_new
 
-
     def dormand_prince(self, f):
         # see https://en.wikipedia.org/wiki/Dormand%E2%80%93Prince_method
         k = numpy.zeros((7 , self.nbodies, 2, 2))
@@ -115,6 +125,32 @@ class Nbody(object):
 
         return self.q + self.dt * numpy.sum(k * b[:,numpy.newaxis, numpy.newaxis, numpy.newaxis], axis=0)
 
+    def adams_bashforth(self, f, previous_fs):
+        # See http://www.math.iit.edu/~fass/478578_Chapter_2.pdf
+        previous_fs[4,:,:,:] = f(self.q)
+        return self.q + self.dt / 720. * (1901 * previous_fs[4,:,:,:]
+                                          - 2774 * previous_fs[3,:,:,:]
+                                          + 2616 * previous_fs[2,:,:,:]
+                                          - 1274 * previous_fs[1,:,:,:]
+                                          + 251 * previous_fs[0,:,:,:])
+
+    def adams_moulton(self, f, previous_fs):
+        # See http://www.math.iit.edu/~fass/478578_Chapter_2.pdf
+        # predictor
+        q_temp = self.adams_bashforth(f, previous_fs)
+
+        # corrector
+        previous_fs[0,:,:,:] = f(q_temp)
+        q_new = self.q + self.dt / 720. * (251 * previous_fs[0,:,:,:]
+                                          + 646 * previous_fs[4,:,:,:]
+                                          - 264 * previous_fs[3,:,:,:]
+                                          + 106 * previous_fs[2,:,:,:]
+                                          - 19 * previous_fs[1,:,:,:])
+        # update previous_fs
+        for i in range(4):
+            previous_fs[i,:,:,:] = previous_fs[i+1,:,:,:]
+
+        return q_new
 
     def potential_energy(self):
         U = 0
@@ -140,14 +176,16 @@ class Nbody(object):
         self.output_file["I"][self.time] = self.I
 
     def contain_particles(self):
+        # Stop particles moving outside of box
         for n in range(self.nbodies):
-            # x-direciton
+            # x-direction
             if self.q[n,1,0] < -0.5*self.box_size[0]:
                 self.q[n,1,0] = -self.box_size[0] - self.q[n,1,0]
                 self.q[n,0,0] *= -1.
             elif self.q[n,1,0] > 0.5*self.box_size[0]:
                 self.q[n,1,0] = self.box_size[0] - self.q[n,1,0]
                 self.q[n,0,0] *= -1.
+                # y-direction
             if self.q[n,1,1] < -0.5*self.box_size[1]:
                 self.q[n,1,1] = -self.box_size[1] - self.q[n,1,1]
                 self.q[n,0,1] *= -1.
@@ -156,17 +194,27 @@ class Nbody(object):
                 self.q[n,0,1] *= -1.
 
     def evolve(self):
+        # run simulation
         fig = pyplot.figure(figsize=(18,8))
         gridspec.GridSpec(2,4)
         ax1 = pyplot.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
         ax2 = pyplot.subplot2grid((2,4), (0,2), colspan=2)
         ax3 = pyplot.subplot2grid((2,4), (1,2), colspan=2)
         pyplot.ion()
-        #pyplot.show()
+
+        previous_fs = numpy.zeros((5, self.nbodies, 2, 2))
+
         for i in range(self.nt):
             self.time += 1
 
-            self.q = self.dirk3(self.step)
+            if self.integrator == self.adams_moulton or self.integrator == self.adams_bashforth:
+                if self.time > 5:
+                    self.q = self.integrator(self.step, previous_fs)
+                else:
+                    previous_fs[self.time-1,:,:,:] = self.step(self.q)
+                    self.q = self.dormand_prince(self.step)
+            else:
+                self.q = self.integrator(self.step)
 
             self.contain_particles()
 
@@ -184,6 +232,7 @@ class Nbody(object):
         self.output_file.close()
 
     def print_state(self):
+        # print state to screen
         print("time = {},  U = {},  T = {},  I = {}".format(self.time, self.U, self.T, self.I))
 
     def plot_bodies(self, ax):
@@ -211,5 +260,5 @@ class Nbody(object):
         ax.scatter(self.time, self.I, marker='x')
 
 if __name__ == "__main__":
-    nbody = Nbody()
+    nbody = Nbody(integrator="adams-bashforth")
     nbody.evolve()
