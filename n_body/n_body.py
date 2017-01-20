@@ -2,7 +2,7 @@ import numpy
 from numpy.random import rand
 from numpy.linalg import solve
 import h5py
-from matplotlib import pyplot, animation, cm, gridspec
+from matplotlib import pyplot, gridspec
 
 class Nbody(object):
     def __init__(self, nbodies=100, nt=1000, dt=0.0001, output_file="nbody_data.h5", integrator="dormand-prince"):
@@ -86,6 +86,8 @@ class Nbody(object):
 
     def dirk3(self, f):
         # Implicit diagonal third order Runge-Kutta
+        # decomposed flux into linear part (0, v)^T and non-linear part
+        # (sum (Gm r / |r|^3), 0)^T
         mu = 0.5 * (1. - 1./numpy.sqrt(3.))
         nu = 0.5 * (numpy.sqrt(3.))
         gamma = 3. / (2. * (3. + numpy.sqrt(3.)))
@@ -127,6 +129,10 @@ class Nbody(object):
 
     def adams_bashforth(self, f, previous_fs):
         # See http://www.math.iit.edu/~fass/478578_Chapter_2.pdf
+        # update previous_fs
+        for i in range(4):
+            previous_fs[i,:,:,:] = previous_fs[i+1,:,:,:]
+
         previous_fs[4,:,:,:] = f(self.q)
         return self.q + self.dt / 720. * (1901 * previous_fs[4,:,:,:]
                                           - 2774 * previous_fs[3,:,:,:]
@@ -146,9 +152,6 @@ class Nbody(object):
                                           - 264 * previous_fs[3,:,:,:]
                                           + 106 * previous_fs[2,:,:,:]
                                           - 19 * previous_fs[1,:,:,:])
-        # update previous_fs
-        for i in range(4):
-            previous_fs[i,:,:,:] = previous_fs[i+1,:,:,:]
 
         return q_new
 
@@ -260,5 +263,5 @@ class Nbody(object):
         ax.scatter(self.time, self.I, marker='x')
 
 if __name__ == "__main__":
-    nbody = Nbody(integrator="adams-bashforth")
+    nbody = Nbody(integrator="adams-moulton")
     nbody.evolve()
