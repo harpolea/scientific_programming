@@ -33,7 +33,7 @@ class Nbody(object):
 
         self.write_to_file()
 
-        integrators = {"rk3": self.rk3, "dirk3":self.dirk3, "dormand-prince": self.dormand_prince, "adams-moulton": self.adams_moulton, "adams-bashforth": self.adams_bashforth}
+        integrators = {"rk3": self.rk3, "dirk3":self.dirk3, "dormand-prince": self.dormand_prince, "adams-moulton": self.adams_moulton, "adams-bashforth": self.adams_bashforth, "verlet":self.velocity_verlet}
 
         if integrator in integrators:
             self.integrator = integrators[integrator]
@@ -83,6 +83,23 @@ class Nbody(object):
         Dn3 = f(Un3) - f(self.q)
 
         return self.q + self.dt * phi(1, 0.0) * f(self.q) + self.dt * 16. * phi(3, 0.0) * Dn2 + self.dt * (-2. * phi(3, 0.0)) * Dn3
+
+    def velocity_verlet(self, f):
+        # see https://en.wikipedia.org/wiki/Verlet_integration#Velocity_Verlet
+        a = f(self.q)[:,0,:]
+        x_t_plus_dt = self.q[:,1,:] + self.q[:,0,:] * self.dt + 0.5 * a * self.dt**2
+
+        # pad out x_t_plus_dt with dummy v - doesn't matter as f is function
+        # of x only.
+        q_t_plus_dt = numpy.zeros_like(self.q)
+        q_t_plus_dt[:,1,:] = x_t_plus_dt
+        a_t_plus_dt = f(q_t_plus_dt)[:,0,:]
+
+        v_t_plus_dt = self.q[:,0,:] + 0.5 * (a + a_t_plus_dt) * self.dt
+
+        q_t_plus_dt[:,0,:] = v_t_plus_dt
+
+        return q_t_plus_dt
 
     def dirk3(self, f):
         # Implicit diagonal third order Runge-Kutta
@@ -263,5 +280,5 @@ class Nbody(object):
         ax.scatter(self.time, self.I, marker='x')
 
 if __name__ == "__main__":
-    nbody = Nbody(integrator="adams-moulton")
+    nbody = Nbody(integrator="verlet")
     nbody.evolve()
