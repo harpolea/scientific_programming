@@ -1,3 +1,12 @@
+"""
+Simulation based on flocking behaviour, as described here: https://en.wikipedia.org/wiki/Flocking_(behavior)#Flocking_rules
+
+Behaviour is controlled by three simple rules:
+    1. Separation - avoid crowding neighbors (short range repulsion)
+    2. Alignment - steer towards average heading of neighbors
+    3. Cohesion - steer towards average position of neighbors (long range attraction)
+"""
+
 import numpy
 from matplotlib import pyplot, gridspec
 from numpy.random import rand
@@ -35,11 +44,11 @@ class Simulation(object):
             self.birds.add(Bird(position, velocity))
 
         # initialise plotting
-        fig = pyplot.figure(figsize=(18,8))
-        gridspec.GridSpec(2,4)
-        self.ax1 = pyplot.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
-        self.ax2 = pyplot.subplot2grid((2,4), (0,2), colspan=2)
-        self.ax3 = pyplot.subplot2grid((2,4), (1,2), colspan=2)
+        fig = pyplot.figure(figsize=(16,10))
+        gridspec.GridSpec(2,3)
+        self.ax1 = pyplot.subplot2grid((2,3), (0,0), colspan=2, rowspan=2)
+        self.ax2 = pyplot.subplot2grid((2,3), (0,2), colspan=1)
+        self.ax3 = pyplot.subplot2grid((2,3), (1,2), colspan=1)
         pyplot.ion()
 
     def evolve_birds(self):
@@ -58,7 +67,7 @@ class Simulation(object):
                 avoid_direction /= norm(avoid_direction)
                 b.velocity = (average_position - b.pos) / norm(b.pos - average_position) + average_alignment / norm(average_alignment) - avoid_direction
             else:
-                b.velocity = average_position - b.pos) / norm(b.pos - average_position) + average_alignment / norm(average_alignment)
+                b.velocity = (average_position - b.pos) / norm(b.pos - average_position) + average_alignment / norm(average_alignment)
 
             b.velocity /= norm(b.velocity)
 
@@ -69,9 +78,9 @@ class Simulation(object):
     def run(self):
         for t in range(self.nt):
             self.evolve_birds()
-            self.print_birds()
+            self.print_birds(t)
 
-    def print_birds(self):
+    def print_birds(self, t):
         positions = numpy.array([b.pos for b in self.birds])
         velocities = numpy.array([b.velocity for b in self.birds])
 
@@ -83,13 +92,14 @@ class Simulation(object):
         average_direction = numpy.average(velocities, axis=0)
         average_direction /= norm(average_direction)
 
-        self.ax2.quiver(0, 0, average_direction[0], average_direction[1])
+        self.ax2.quiver(0, 0, average_direction[0], average_direction[1] ,units='x', scale=1/0.05)
         self.ax2.set_title('Average direction')
 
-        average_position = numpy.average(positions, axis=0)
+        if t % 10 == 0:
+            average_position = numpy.average(positions, axis=0)
 
-        self.ax3.quiver(average_position[0], average_position[1], average_direction[0], average_direction[1])
-        self.ax3.set_title('Path')
+            self.ax3.quiver(average_position[0], average_position[1], average_direction[0], average_direction[1])
+            self.ax3.set_title('Path')
 
         pyplot.pause(.00001)
 
