@@ -1,0 +1,4 @@
+make
+python 3
+anaconda
+cygwin for windows
