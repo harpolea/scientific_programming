@@ -13,12 +13,12 @@
 }
 
 div.cell { /* set cell width */
-    width: 1000px;
+    width: 75em;
 }
 
 div #notebook { /* centre the content */
     background: #fff; /* white background for content */
-    width: 1200px;
+    width: 80em;
     margin: auto;
     padding-left: 0em;
 }
@@ -34,32 +34,51 @@ div.cell.border-box-sizing.code_cell.running {
 
 /* Put a solid color box around each cell and its output, visually linking them*/
 div.cell.code_cell {
-    font-family: 'Inconsolata', monospace;
+    /*font-family: 'Inconsolata', monospace;*/
     background-color: rgb(256,256,256);
     border-radius: 0px;
     padding: 0.5em;
     margin-left:1em;
+    margin-right:1em;
     margin-top: 1em;
 }
 
 div.text_cell_render{
     font-family: 'Open Sans', sans-serif;
     line-height: 140%;
-    font-size: 125%;
+    font-size: 105%;
     font-weight: 400;
-    width:900px;
-    margin-left:auto;
-    margin-right:auto;
+    padding: 0.5em;
+    margin-left:1em;
+    margin-right:1em;
+}
+
+.text_cell_render pre {
+    white-space: pre;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    background-color: #f5f5f5;
+    padding: 0.5em;
+}
+
+.text_cell_render code {
+    font-size: 95%;
+    white-space: pre;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    background-color: #f5f5f5;
 }
 
 /* Formatting for header cells */
 .text_cell_render h1 {
     font-family: 'Merriweather', serif;
-    font-style:regular;
+    font-style: regular;
     font-weight: 400;
-    font-size: 40pt;
+    font-size: 3em;
     line-height: 100%;
-    color: rgb(0,51,102);
+    color: rgb(36,67,87);
     margin-bottom: 0.5em;
     margin-top: 0.5em;
     display: block;
@@ -67,30 +86,32 @@ div.text_cell_render{
 .text_cell_render h2 {
     font-family: 'Merriweather', serif;
     font-weight: 400;
-    font-size: 30pt;
+    font-size: 2.2em;
     line-height: 100%;
-    color: rgb(0,51,102);
-    margin-bottom: 0.1em;
+    color: rgb(36,67,87);
+    margin-bottom: 0.3em;
     margin-top: 0.3em;
     display: block;
 }
 
 .text_cell_render h3 {
     font-family: 'Merriweather', serif;
-    margin-top:16px;
-	font-size: 22pt;
+    margin-top:1em;
+	font-size: 1.6em;
     font-weight: 400;
-    margin-bottom: 3px;
+    margin-bottom: 0.3em;
     font-style: regular;
-    color: rgb(0,51,102);
+    color: rgb(85, 111, 127);
 }
 
 .text_cell_render h4 {
-    font-family: 'Merriweather', serif;
-    font-size: 14pt;
-    margin-top: 2em;
-    margin-bottom: 2em;
+    font-family: 'Inconsolata', monospace;
+    /*font-family: 'Merriweather', serif;*/
+    font-size: 1.3em;
+    margin-top: 0.3em;
+    margin-bottom: 0.5em;
     font-style: regular;
+    color: rgb(85, 111, 127);
 }
 
 .text_cell_render h5 {  /*Use this for small titles*/
@@ -114,9 +135,9 @@ div.text_cell_render{
     margin-top: 1px;
 }
 
-.CodeMirror{
+/*.CodeMirror{
         font-size: 120%;
-}
+}*/
 
 </style>
 <script>
