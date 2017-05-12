@@ -13,7 +13,8 @@ class Text(object):
     def __init__(self, filename):
         self.text = self.read_text(filename)
 
-    def read_text(self, filename):
+    @staticmethod
+    def read_text(filename):
         """
         Read the text from the file 'filename' and return lowercase.
         """
