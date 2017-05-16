@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import pytest
 from n_grams import Text
+import numpy
 
 test_files = ["blank.txt", "repeat.txt", "short.txt"]
 
@@ -25,6 +26,12 @@ def test_find_ngrams():
     for value in d.values():
         assert value == 1
 
+def test_average_word_length():
+    with pytest.raises(ZeroDivisionError):
+        Text("blank.txt").average_word_length()
+    assert numpy.allclose(Text("repeat.txt").average_word_length(), (3.536363636363636, 3.0, 3))
+    assert numpy.allclose(Text("short.txt").average_word_length(), (3.2, 4, 4))
+
 def test_word_count():
     assert Text("blank.txt").word_count() == 0
     assert Text("repeat.txt").word_count() == 7480
@@ -34,3 +41,10 @@ def test_longest_words():
     assert len(Text("blank.txt").longest_words()) == 0
     assert Text("repeat.txt").longest_words()[0] == "jumblies"
     assert Text("short.txt").longest_words()[0] == "short"
+
+def test_common_words():
+    assert len(Text("blank.txt").common_words()) == 0
+    assert Text("repeat.txt").common_words()[:3] == [('sieve', 476), ('they', 408), ('sea', 340)]
+    # check no word appears more than once in this file
+    for word, freq in Text("short.txt").common_words():
+        assert freq == 1

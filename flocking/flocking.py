@@ -49,7 +49,8 @@ class Simulation(object):
         self.ax1 = pyplot.subplot2grid((2,3), (0,0), colspan=2, rowspan=2)
         self.ax2 = pyplot.subplot2grid((2,3), (0,2), colspan=1)
         self.ax3 = pyplot.subplot2grid((2,3), (1,2), colspan=1)
-        pyplot.ion()
+        fig.show()
+        #pyplot.ion()
 
     def evolve_birds(self):
         nbirds = len(self.birds)
