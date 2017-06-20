@@ -1,0 +1,99 @@
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Merriweather:400,700,400italic' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+<style>
+
+@font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
+}
+
+#notebook_panel { /* main background */
+    background: rgb(245,245,245);
+}
+
+div #notebook { /* centre the content */
+    background: #fff; /* white background for content */
+}
+
+
+div.text_cell_render{
+    font-family: 'Open Sans', sans-serif;
+}
+
+
+/* Formatting for header cells */
+.text_cell_render h1 {
+    font-family: 'Merriweather', serif;
+    font-style: regular;
+    font-weight: 400;
+    color: rgb(36,67,87);
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+    display: block;
+}
+.text_cell_render h2 {
+    font-family: 'Merriweather', serif;
+    font-weight: 400;
+    line-height: 100%;
+    color: rgb(36,67,87);
+    margin-bottom: 0.3em;
+    margin-top: 0.3em;
+    display: block;
+}
+
+.text_cell_render h3 {
+    font-family: 'Merriweather', serif;
+    margin-top:1em;
+    font-weight: 400;
+    margin-bottom: 0.3em;
+    font-style: regular;
+    color: rgb(85, 111, 127);
+}
+
+.text_cell_render h4 {
+    font-family: 'Inconsolata', monospace;
+    margin-top: 0.3em;
+    margin-bottom: 0.5em;
+    font-style: regular;
+    color: rgb(85, 111, 127);
+}
+
+.text_cell_render h5 {  /*Captions*/
+    font-family: 'Merriweather', serif;
+    font-weight: 400;
+    color: rgb(85, 111, 127);
+    font-style: regular;
+    margin-bottom: .1em;
+    margin-top: 0.8em;
+    display: block;
+    text-align: center;
+}
+
+.text_cell_render h6 { /*use this for copyright note*/
+    font-family: 'Inconsolata', sans-serif;
+    font-weight: 300;
+    line-height: 100%;
+    color: grey;
+    margin-bottom: 1px;
+    margin-top: 1px;
+}
+
+
+</style>
+<script>
+    MathJax.Hub.Config({
+                        TeX: {
+                           extensions: ["AMSmath.js"],
+                           equationNumbers: { autoNumber: "AMS", useLabelIds: true}
+                           },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ]
+                },
+                displayAlign: 'center', // Change this to 'center' to center equations.
+                "HTML-CSS": {
+                    styles: {'.MathJax_Display': {"margin": 4}}
+                }
+        });
+</script>
