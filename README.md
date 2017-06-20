@@ -14,7 +14,7 @@ The notebooks are best viewed on [nbviewer](https://nbviewer.jupyter.org/github/
 
 The notebooks rely on a number of python libraries. These can be installed most easily by first creating a runtime environment:
 
-    conda create -n ngcm_sciprog python=3 numpy scipy jupyter pandas matplotlib seaborn bokeh plotly Sphinx nbsphinx silly nbconvert    
+    conda create -n ngcm_sciprog python=3 numpy scipy jupyter pandas matplotlib seaborn bokeh plotly Sphinx nbsphinx silly nbconvert pytest pytest-cov   
 
 Activate this environment:
 

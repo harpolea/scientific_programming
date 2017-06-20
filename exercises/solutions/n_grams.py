@@ -17,7 +17,20 @@ class Text(object):
     def read_text(filename):
         """
         Read the text from the file 'filename' and return lowercase.
+
+        Parameters
+        ----------
+        filename : string
+            Name and path of file to be analysed.
+
+        Returns
+        -------
+        string list
+            List of words in text, with all punctuation stripped and all text set to lowercase
         """
+
+        if '.txt' not in filename:
+            raise ValueError('Input file must be a .txt file!')
 
         if filename[:4] == "http": # website
             website = urlopen(filename)
@@ -44,6 +57,16 @@ class Text(object):
     def find_ngrams(self, n):
         """
         Find n-grams of Text object. Returns dictionary of n-grams.
+
+        Parameters
+        ----------
+        n : integer
+            Length of n-grams to construct
+
+        Returns
+        -------
+        output : dictionary
+            Dictionary of n-grams in the text. The keys are the n-grams, the values the frequency they appear in the text.
         """
 
         output = {}
@@ -58,25 +81,59 @@ class Text(object):
     def average_word_length(self):
         """
         Return mean, median and mode word length. Includes only words (i.e. no numbers) in calculation.
+
+        Returns
+        -------
+        float tuple
+            Mean, median and mode word length
         """
         len_words_only = [len(s) if s.isalpha() else 0 for s in self.text]
-        return sum(len_words_only) / len(len_words_only), median(len_words_only), mode(len_words_only)
+        if (len_words_only == 0):
+            print('Input file contains no words.')
+            return 0, 0, 0
+        else:
+            return sum(len_words_only) / len(len_words_only), median(len_words_only), mode(len_words_only)
 
     def word_count(self):
         """
         Returns number of words in the text.
+
+        Returns
+        -------
+        integer
+            number of words in text
         """
         return len(self.text)
 
     def longest_words(self, n=10):
         """
         Return the n longest words in the text.
+
+        Parameters
+        ---------
+        n : integer, optional
+            Number of words to return. Default is 10.
+
+        Returns
+        -------
+        string list
+            N longest words in text (sorted with longest first)
         """
         return sorted(set(self.text), key=len, reverse=True)[:n]
 
     def common_words(self, n=10):
         """
         Return the n most common words in the text. Only looks for words with 3 or more letters and ignores a given set of very common words.
+
+        Parameters
+        ----------
+        n : integer, option
+            Number of words to return. Default is 10
+
+        Returns
+        -------
+        string list
+            Most common words in text (with most common first)
         """
         # remove some really common words
         ignore = ['a', 'i', 'it', 'the', 'and', 'in', 'he', 'she', 'to', 'at', 'of', 'that', 'as', 'is', 'his', 'my', 'for', 'was', 'me', 'we', 'be', 'on', 'so']
@@ -96,7 +153,10 @@ class Text(object):
 
         print("\nMean, median and mode word length is {}, {}, {}.".format(mean, median, mode))
 
-        print("\n10 longest words:")
+        if word_count < 10:
+            print("\nLongest words:")
+        else:
+            print("\n10 longest words:")
         for s in self.longest_words():
             print(s)
 
@@ -140,7 +200,7 @@ if __name__ == "__main__":
         #filename = "http://www.gutenberg.org/files/11/11-0.txt" # alice
         #filename = "http://www.gutenberg.org/ebooks/345.txt.utf-8" # dracula
         #filename = "http://www.gutenberg.org/ebooks/1661.txt.utf-8" # sherlock
-        filename = "the_raven.txt" # poe
+        filename = "../the_raven.txt" # poe
 
     txt = Text(filename)
 
