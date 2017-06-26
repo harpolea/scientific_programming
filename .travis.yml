@@ -2,7 +2,12 @@ language: python # which language is our project written in
 python: # which versions of python should the code be tested in
     - "3.5"
 # command to install dependencies
+install:
+    - pip install codecov
+    - pip install pytest-cov
 # command to run tests
 script:
-    - cd execises/solutions
-    - pytest
+    - cd exercises/solutions
+    - pytest --cov=./
+after_sucess:
+    - codecov
