@@ -1,6 +1,6 @@
 language: python # which language is our project written in
 python: # which versions of python should the code be tested in
-    - "3.5"
+    - "3.6"
 # command to install dependencies
 install:
     - pip install codecov
