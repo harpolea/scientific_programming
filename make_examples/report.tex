@@ -1,0 +1,32 @@
+\documentclass[11pt, twoside, a4paper, final]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{parskip} 
+\frenchspacing 
+\setlength{\parindent}{0cm}
+\usepackage{amsfonts} 
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{natbib}
+\usepackage{siunitx}
+\usepackage{todonotes}
+
+\author{Alice Harpole}
+\title{Example tex file}
+\begin{document}
+\maketitle
+
+\section{Title}
+
+text text \citep{Trefethen2000}
+
+\begin{figure}
+\includegraphics{figures/fig.pdf}
+\caption{A picture}
+\end{figure}
+
+
+\bibliographystyle{plain}
+\bibliography{library}
+
+\end{document}
