@@ -16,6 +16,14 @@ The notebooks rely on a number of python libraries. These can be installed most 
 
     conda create -n ngcm_sciprog python=3 numpy scipy jupyter pandas matplotlib seaborn bokeh plotly Sphinx nbsphinx silly nbconvert pytest pytest-cov   
 
+If you are running Mac OS, Sphinx and nbsphinx need to be installed separately. Instead try
+
+    conda create -n ngcm_sciprog python=3 numpy scipy jupyter pandas matplotlib seaborn bokeh plotly Sphinx nbsphinx silly nbconvert pytest pytest-cov
+
+then install Sphinx and nbsphinx using pip:
+
+    pip install nbsphinx sphinx
+
 Activate this environment:
 
     source activate ngcm_sciprog
