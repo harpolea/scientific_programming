@@ -5,9 +5,10 @@ python: # which versions of python should the code be tested in
 install:
     - pip install codecov
     - pip install pytest-cov
+    - pip install coverage
 # command to run tests
 script:
     - cd exercises/solutions
     - pytest --cov=./
-after_sucess:
+after_script:
     - codecov
