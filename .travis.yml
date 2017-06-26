@@ -1,0 +1,8 @@
+language: python # which language is our project written in
+python: # which versions of python should the code be tested in
+    - "3.5"
+# command to install dependencies
+# command to run tests
+script:
+    - cd execises/solutions
+    - pytest
