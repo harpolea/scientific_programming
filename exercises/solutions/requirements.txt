@@ -1,5 +1,2 @@
 matplotlib
 numpy
-sphinx>=1.4
-ipykernel
-nbsphinx

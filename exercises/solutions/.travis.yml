@@ -2,8 +2,24 @@ language: python # which language is our project written in
 python: # which versions of python should the code be tested in
     - "3.5"
     - "3.6"
+before_install:
+    - sudo apt-get update
 # command to install dependencies
 install:
+    # Setup anaconda
+    # We do this conditionally because it saves us some downloading if the
+    # version is the same.
+    - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - hash -r
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    # Useful for debugging any issues with conda
+    - conda info -a
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib ipython nose
+    - source activate test-environment
+    - pip install -r requirements.txt
     - pip install codecov
     - pip install pytest-cov
 # command to run tests
