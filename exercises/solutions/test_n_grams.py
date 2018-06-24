@@ -6,7 +6,7 @@ import numpy
 test_files = ["blank.txt", "repeat.txt", "short.txt"]
 
 def test_read_text():
-    assert len(Text.read_text("blank.txt")) == 10
+    assert len(Text.read_text("blank.txt")) == 0
     assert len(Text.read_text("repeat.txt")) == 7480
     assert len(Text.read_text("short.txt")) == 5
     with pytest.raises(Exception):
