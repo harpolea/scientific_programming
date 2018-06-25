@@ -11,3 +11,4 @@ Welcome to N grams's documentation!
    :caption: Contents:
 
    module.rst
+   Exercise_text_analysis_solutions
